@@ -167,7 +167,7 @@ Uploads model weights and GGUF binaries directly to Hugging Face for remote dist
 python3 push_to_huggingface.py
 
 ```
-![Hugging Face Upload Execution](assets/hf_upload.png)
+![Hugging Face Upload Execution](assets/hf_upload_shot.png)
 
 * **Repository:** [MaxwellMensah/fraud_model_v5_20260828](https://huggingface.co/MaxwellMensah/fraud_model_v5_20260828)
 
