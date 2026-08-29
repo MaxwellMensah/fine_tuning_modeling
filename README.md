@@ -1,10 +1,10 @@
 ```markdown
 # 🛡️ Custom Fraud Analysis Engine
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
-![Unsloth](https://img.shields.io/badge/Fine--Tuned%20With-Unsloth-FF6F00)
-![Base Model](https://img.shields.io/badge/Base%20Model-Llama--3.2-purple)
-![Hub](https://img.shields.io/badge/Hugging%20Face-MaxwellMensah-yellow)
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
+![Unsloth](https://img.shields.io/badge/Fine--Tuned_With-Unsloth-FF6F00)
+![Base Model](https://img.shields.io/badge/Base_Model-Llama_3.2-purple)
+![Hugging Face](https://img.shields.io/badge/Hugging_Face-MaxwellMensah-yellow?logo=huggingface)
 
 An end-to-end pipeline for fine-tuning **Llama 3.2** on domain-specific transaction fraud datasets using **Unsloth**. This repository covers dataset formatting, low-rank adaptation (LoRA) training, 4-bit GGUF model quantization, edge-case safety evaluation, and automated Hugging Face Hub deployment.
 
