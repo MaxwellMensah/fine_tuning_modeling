@@ -1,115 +1,188 @@
+```markdown
 # 🛡️ Custom Fraud Analysis Engine
 
-An end-to-end implementation of a custom-tuned **Llama 3.2 3B** reasoning engine. This project demonstrates the lifecycle of a specialized LLM from cloud-based fine-tuning to local CPU-based deployment.
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
+![Unsloth](https://img.shields.io/badge/Fine--Tuned%20With-Unsloth-FF6F00)
+![Base Model](https://img.shields.io/badge/Base%20Model-Llama--3.2-purple)
+![Hub](https://img.shields.io/badge/Hugging%20Face-MaxwellMensah-yellow)
+
+An end-to-end pipeline for fine-tuning **Llama 3.2** on domain-specific transaction fraud datasets using **Unsloth**. This repository covers dataset formatting, low-rank adaptation (LoRA) training, 4-bit GGUF model quantization, edge-case safety evaluation, and automated Hugging Face Hub deployment.
 
 ---
 
-## 🧠 Part 1: Fine-Tuning (The "Cloud" Phase)
+## 🔄 End-to-End Pipeline Architecture
 
-### Model & Dataset
-
-* **Base Model:** `unsloth/Llama-3.2-3B-Instruct`
-* **Dataset:** `mlabonne/FineTome-100k` (A high-quality reasoning dataset)
-
-### Key Configuration Changes
-
-To increase the precision and "intelligence" of the model, the following training hyper-parameters were tuned:
-
-* **Learning Rate:** Set to **`2e-5`** (using `adamw_8bit`) to ensure stable weight updates during the **60-step run**.
-* **LoRA Configuration:** Used a **Rank (`r`) of 16** and **Alpha of 16** to target key modules (`q_proj`, `v_proj`, etc.), optimizing VRAM usage.
-* **Optimization:** Employed **`train_on_responses_only`** to mask user inputs and force the model to focus purely on perfecting reasoning outputs.
-
-### Exporting the "Brain"
-
-After training, the model was converted to **GGUF format** to bridge the gap to local hardware:
-
-```python
-model.save_pretrained_gguf("model", tokenizer, quantization_method = "q4_k_m")
+```text
+[ Dataset (.jsonl) ] ➔ [ sft_training.py ] ➔ [ outputs/ (LoRA Adapters) ]
+                                                     │
+[ HF Hub ]  [ push_to_huggingface.py ]  [ export_model.py ] ➔ [ saved_llama/ (Merged) ]
+                                                                     │
+[ Ollama Local ]  [ Modelfile ]  [ test_edge_case.py ]  [ transform_gguf.py ] (Q4_K_M)
 
 ```
 
 ---
 
-## 📦 Part 2: Local Deployment (The "Home" Phase)
+## 🎯 Sample Model Output
 
-### 1. Transferring the Model
+The fine-tuned model enforces a strict, four-step chain-of-thought reasoning framework to evaluate transaction signals prior to issuing a final risk decision:
 
-Because the `.gguf` file is approximately **1.9GB**, it was compressed into a ZIP archive to ensure a stable download from the Kaggle environment:
+```text
+### Input Query:
+U-1193821 attempting rapid successive 4.99 USD payments (x6). IP is Proxy/Relay. Singapore, 03:45 AM. Mobile (new) used.
 
-```bash
-zip -r fine_tuned_model.zip model_gguf
-
-```
-
-### 2. Creating the Ollama Specialist
-
-To give the raw weights a specific "Job Description," an **Ollama Modelfile** was created in the local project directory:
-
-```dockerfile
-# Modelfile
-FROM ./llama-3.2-3b-instruct.Q4_K_M.gguf
-
-# Personality Injection
-SYSTEM "You are a professional analyst fine-tuned for high precision. Use step-by-step logic to solve problems."
-
-# Consistency Tuning
-PARAMETER temperature 0
+### Fine-Tuned Model Inference:
+Step 1: Context - U-1193821 attempted a large 4.99 USD transfer from Singapore at 03:45 AM.
+Step 2: Anomaly Detection - Flagged IP (Proxy/Relay), device mismatch (Mobile (new)), and unusual timing detected.
+Step 3: Risk Assessment - Velocity of transactions and hidden IP suggest account takeover.
+Step 4: Decision - High risk due to combined anonymized IP, new device, and shipping deviation. Transaction blocked and flagged for manual review.
 
 ```
-
-**Register the model locally:**
-
-```bash
-ollama create fraud-reasoner -f Modelfile
-
-```
-
----
-
-## 🐍 Part 3: LangChain Integration
-
-The final application utilizes **LangChain Expression Language (LCEL)** to create a clean, streamable interface.
-
-### `langchain_intro.py` Highlights:
-
-* **Provider:** `langchain_ollama`
-* **Output Parsing:** Uses `StrOutputParser` to return a clean string instead of a complex message object.
-* **The Chain:** `prompt | llm | StrOutputParser()`
-
-### Sample Output Analysis
-
-**Query:** *"Analyze the fraud risk of a transaction from an unknown IP at 3 AM."*
-
-**Result:** Instead of a simple "yes/no," the model provides a **4-step logical breakdown**:
-
-1. **Context** Analysis
-2. **Anomaly** Detection
-3. **Pattern** Recognition
-4. **Risk Evaluation**
-
----
-
-## 🚀 How to Run
-
-1. **Local Setup:** Install requirements via `pip install langchain-ollama langchain_core`.
-2. **Ollama:** Ensure [Ollama](https://ollama.com/) is installed and running.
-3. **Model Build:** Download your exported `.gguf` and run the `ollama create` command.
-4. **Execute:** Run `python langchain_intro.py`.
-
----
-
-## 📝 Reflections: The Cost of Abstraction
-
-This project highlights how **LangChain** and **Ollama Modelfiles** abstract away the complexity of raw LLM interaction:
-
-* **Visibility Cost:** We no longer see raw `<|start_header_id|>` tags or the underlying tensor math.
-* **Gain:** We gain a **modular, readable pipeline** where we can swap models or prompt templates by changing a single line of code.
 
 ---
 
 ## 📂 Project Structure
 
-* `llama3_2_conversational.py`: Kaggle/Colab Training Script
-* `langchain_intro.py`: Local Inference Script
-* `Modelfile`: Ollama Configuration
-* `README.md`: Project Documentation
+* **`sft_training.py`**: Handles dataset loading, ShareGPT template formatting, LoRA adapter target injection, and 4-bit SFT execution using Unsloth.
+* **`export_model.py`**: Merges fine-tuned LoRA adapter weights back into the 16-bit base model and exports full local checkpoints.
+* **`transform_gguf.py`**: Quantizes merged model weights into `Q4_K_M` GGUF format for CPU/edge deployment.
+* **`test_edge_case.py`**: Evaluates model performance against high-value domestic transfers, foreign residential IPs, and proxy micro-transactions.
+* **`push_to_huggingface.py`**: Uploads local model artifacts and GGUF files directly to Hugging Face Hub (`MaxwellMensah/fraud_model_v5_20260828`).
+* **`dataset_creation.py`**: Script for generating and augmenting synthetic fraud transaction patterns.
+* **`fraud_detection_dataset_V4.jsonl`**: The target fine-tuning dataset formatted with structured system, user, and assistant turns.
+* **`Modelfile`**: Configuration for building local Ollama instances from exported GGUF weights.
+
+---
+
+## 📋 Data Format Specification
+
+The fine-tuning dataset (`fraud_detection_dataset_V4.jsonl`) follows a structured multi-turn JSON array schema:
+
+```json
+{
+  "conversations": [
+    {
+      "role": "system",
+      "content": "You are a fraud detection expert. Analyze transactions using step-by-step reasoning."
+    },
+    {
+      "role": "user",
+      "content": "U-8916730 attempting 12,500.00 USD transfer. IP is Corporate Network. Toronto, afternoon. Desktop (saved) used."
+    },
+    {
+      "role": "assistant",
+      "content": "Step 1 - Context: U-8916730 initiated a 12,500.00 USD payment from Toronto at afternoon.\nStep 2 - Anomaly Detection: All signals clean. IP (Corporate Network) and device (Desktop (saved)) match profile. Normal timing.\nStep 3 - Risk Assessment: Low risk due to stable location history and successful recent 2FA.\nStep 4 - Decision: Low risk - Transaction approved."
+    }
+  ]
+}
+
+```
+
+---
+
+## ⚙️ Prerequisites & Setup
+
+1. **Install Dependencies:**
+```bash
+pip install unsloth python-dotenv huggingface_hub torch datasets trl transformers
+
+```
+
+
+2. **Environment Configuration:**
+Create a `.env` file in the project root:
+```env
+HF_TOKEN=your_huggingface_write_token
+
+```
+
+
+3. **Hugging Face CLI Login:**
+```bash
+huggingface-cli login
+
+```
+
+
+
+---
+
+## 🚀 Execution Workflow
+
+Execute the scripts sequentially to fine-tune, export, test, and publish the model:
+
+### Step 1: Fine-Tune Base Model
+
+Runs Supervised Fine-Tuning (SFT) over 350 steps using 4-bit acceleration:
+
+```bash
+python3 sft_training.py
+
+```
+
+* **Input:** `fraud_detection_dataset_V4.jsonl`
+* **Output:** Saved LoRA checkpoint in `outputs/checkpoint-350/`
+
+### Step 2: Merge & Export Model Weights
+
+Consolidates trained LoRA adapters back into full precision model weights:
+
+```bash
+python3 export_model.py
+
+```
+
+* **Output:** Merged 16-bit model directory saved to `saved_llama/`
+
+### Step 3: Quantize Weights to 4-bit GGUF
+
+Converts saved full precision weights into lightweight `Q4_K_M` GGUF binaries:
+
+```bash
+python3 transform_gguf.py
+
+```
+
+* **Output:** Quantized `.gguf` file generated inside `saved_llama/`
+
+### Step 4: Run Edge-Case Performance Checks
+
+Runs validation queries against clean enterprise transfers and hidden proxy threats:
+
+```bash
+python3 test_edge_case.py
+
+```
+
+### Step 5: Push Artifacts to Hugging Face Hub
+
+Uploads model weights and GGUF binaries directly to Hugging Face for remote distribution:
+
+```bash
+python3 push_to_huggingface.py
+
+```
+
+* **Repository:** [MaxwellMensah/fraud_model_v5_20260828](https://www.google.com/search?q=https://huggingface.co/MaxwellMensah/fraud_model_v5_20260828)
+
+---
+
+## 💻 Local Ollama Deployment
+
+Deploy your exported GGUF model locally using Ollama:
+
+1. **Configure `Modelfile`:**
+```dockerfile
+FROM ./saved_llama/unsloth.Q4_K_M.gguf
+PARAMETER temperature 0.0
+SYSTEM "You are a fraud detection expert. Analyze transactions using step-by-step reasoning."
+
+```
+
+
+2. **Build and Serve:**
+```bash
+ollama create fraud-reasoner -f Modelfile
+ollama run fraud-reasoner "U-1193821 rapid successive 4.99 USD payments (x6). IP: Proxy. Singapore, 03:45 AM."
+
+```
