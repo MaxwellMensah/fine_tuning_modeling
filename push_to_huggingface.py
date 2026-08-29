@@ -13,6 +13,9 @@
 import os
 from dotenv import load_dotenv
 from huggingface_hub import HfApi
+import os
+from dotenv import load_dotenv
+from huggingface_hub import HfApi
 
 # Force-load .env securely from the script's exact directory for background execution
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,11 +26,20 @@ repo_id = "MaxwellMensah/fraud_model_v5_20260828"
 
 api = HfApi()
 
-print("Uploading GGUF model folder to Hugging Face...")
+# 1. Upload Full Model Weights (safetensors / config)
+print("Uploading 16-bit model weights (saved_llama)...")
 api.upload_folder(
     folder_path="saved_llama",
     repo_id=repo_id,
     token=HF_TOKEN,
 )
 
-print(f"Successfully uploaded! Model is ready at https://huggingface.co/{repo_id}")
+# 2. Upload GGUF Model & Modelfile
+print("Uploading GGUF binaries and Modelfile (saved_llama_gguf)...")
+api.upload_folder(
+    folder_path="saved_llama_gguf",
+    repo_id=repo_id,
+    token=HF_TOKEN,
+)
+
+print(f"\nSuccessfully uploaded all artifacts! Model is ready at https://huggingface.co/{repo_id}")
