@@ -26,7 +26,7 @@ repo_id = "MaxwellMensah/fraud_model_v5_20260828"
 
 api = HfApi()
 
-# 1. Upload Full Model Weights (safetensors / config)
+# Upload Full Model Weights (safetensors / config)
 print("Uploading 16-bit model weights (saved_llama)...")
 api.upload_folder(
     folder_path="saved_llama",
@@ -34,7 +34,7 @@ api.upload_folder(
     token=HF_TOKEN,
 )
 
-# 2. Upload GGUF Model & Modelfile
+# Upload GGUF Model & Modelfile
 print("Uploading GGUF binaries and Modelfile (saved_llama_gguf)...")
 api.upload_folder(
     folder_path="saved_llama_gguf",
