@@ -1,4 +1,3 @@
-```markdown
 # 🛡️ Custom Fraud Analysis Engine
 
 <p align="left">
@@ -16,14 +15,19 @@ An end-to-end pipeline for fine-tuning **Llama 3.2** on domain-specific transact
 
 ## 🔄 End-to-End Pipeline Architecture
 
-```text
-[ Dataset (.jsonl) ] ➔ [ sft_training.py ] ➔ [ outputs/ (LoRA Adapters) ]
-                                                     │
-[ HF Hub ]  [ push_to_huggingface.py ]  [ export_model.py ] ➔ [ saved_llama/ (Merged) ]
-                                                                     │
-[ Ollama Local ]  [ Modelfile ]  [ test_edge_case.py ]  [ transform_gguf.py ] (Q4_K_M)
+## 🔄 End-to-End Pipeline Architecture
 
-```
+```mermaid
+flowchart TD
+    A[fraud_detection_dataset_V4.jsonl] -->|SFT Training| B(sft_training.py)
+    B -->|Save Adapters| C[outputs/ (LoRA Adapters)]
+    C -->|Merge Weights| D(export_model.py)
+    D -->|Export Checkpoint| E[saved_llama/ (16-bit)]
+    E -->|Quantize Q4_K_M| F(transform_gguf.py)
+    F -->|Export GGUF| G[saved_llama/unsloth.Q4_K_M.gguf]
+    G -->|Run Validation| H(test_edge_case.py)
+    G -->|Upload Artifacts| I(push_to_huggingface.py) --> J[Hugging Face Hub]
+    G -->|Local Deployment| K[Modelfile] --> L[Ollama Engine]
 
 ---
 
