@@ -9,8 +9,6 @@
 
 An end-to-end pipeline for fine-tuning **Llama 3.2** on domain-specific transaction fraud datasets using **Unsloth**. This repository covers dataset formatting, low-rank adaptation (LoRA) training, 4-bit GGUF model quantization, edge-case safety evaluation, and automated Hugging Face Hub deployment.
 
-An end-to-end pipeline for fine-tuning **Llama 3.2** on domain-specific transaction fraud datasets using **Unsloth**. This repository covers dataset formatting, low-rank adaptation (LoRA) training, 4-bit GGUF model quantization, edge-case safety evaluation, and automated Hugging Face Hub deployment.
-
 ---
 
 ## 🔄 End-to-End Pipeline Architecture
@@ -169,8 +167,9 @@ Uploads model weights and GGUF binaries directly to Hugging Face for remote dist
 python3 push_to_huggingface.py
 
 ```
+![Hugging Face Upload Execution](assets/hf_upload.png)
 
-* **Repository:** [MaxwellMensah/fraud_model_v5_20260828](https://www.google.com/search?q=https://huggingface.co/MaxwellMensah/fraud_model_v5_20260828)
+* **Repository:** [MaxwellMensah/fraud_model_v5_20260828](https://huggingface.co/MaxwellMensah/fraud_model_v5_20260828)
 
 ---
 
