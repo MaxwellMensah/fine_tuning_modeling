@@ -1,6 +1,0 @@
-FROM ./llama-3.2-3b-instruct.Q4_K_M.gguf
-
-# Since the model is now better at reasoning, we tell it to use that skill
-SYSTEM "You are an expert analyst. When given a scenario, use step-by-step logic to determine risk, focusing on anomalies and suspicious patterns."
-
-PARAMETER temperature 0
