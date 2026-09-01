@@ -22,22 +22,22 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(current_dir, ".env"))
 
 HF_TOKEN = os.getenv("HF_TOKEN")
-repo_id = "MaxwellMensah/fraud_model_v5_20260828"
+repo_id = "MaxwellMensah/fraud_model_v7"
 
 api = HfApi()
 
 # Upload Full Model Weights (safetensors / config)
-print("Uploading 16-bit model weights (saved_llama)...")
+print("Uploading 16-bit model weights (model weights folder)...")
 api.upload_folder(
-    folder_path="saved_llama",
+    folder_path="fraud_model_v7",
     repo_id=repo_id,
     token=HF_TOKEN,
 )
 
 # Upload GGUF Model & Modelfile
-print("Uploading GGUF binaries and Modelfile (saved_llama_gguf)...")
+print("Uploading GGUF binaries and Modelfile (gguf folder)...")
 api.upload_folder(
-    folder_path="saved_llama_gguf",
+    folder_path="fraud_model_v7_gguf",
     repo_id=repo_id,
     token=HF_TOKEN,
 )
