@@ -151,11 +151,6 @@ python3 transform_gguf.py
 ```bash
 ollama create fraud-model-v7 -f fraud_model_v7_gguf/Modelfile
 ```
-
-That ordering makes complete practical sense—running quick sanity checks on edge cases catches hallucinations early before committing compute time to the heavy 600-sample benchmark run.
-
-Here is the revised **Step 5** block for your `README.md`:
-
 ---
 
 ### Step 5: Edge Testing & Quantitative Benchmarking
